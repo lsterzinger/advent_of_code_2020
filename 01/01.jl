@@ -1,27 +1,22 @@
 using DelimitedFiles
 using Printf
-nums = readdlm("./input_a.dat")
-#println(nums)
-n = length(nums)
-n2 = Int(n/2)
+using Combinatorics
 
-for i  = 1:200
-    for j = 1:200
-        a = nums[i]
-        b = nums[j]
-        if i != j
-            if a+b == 2020
-                @printf("Double! %.0f * %.0f = %.0f\n", a,b,a*b)
-                
-            end
-            for k = 1:200
-                c = nums[k]
-                if i != j != k
-                    if a + b + c == 2020
-                        @printf("Triple! %.0f * %.0f * %.0f = %.0f\n", a,b,c,a*b*c)
-                    end
-                end
-            end
+# Import Data
+nums = readdlm("./input_a.dat")
+
+# Function to check all possible sums of `arr` in groups of `n` that equal `target`
+function check_sums(arr, n, target)
+    pairs = collect(combinations(arr, n))
+    for p in pairs
+        if sum(p) == target
+            @printf("Combination of %d values that results in %d\n", n, target)
+            println(p)
+            @printf("Sum: %i\tProduct: %i\n\n", sum(p), prod(p))
+            return p
         end
     end
 end
+
+check_sums(nums, 2, 2020) # Check 2 values that sum to 2020
+check_sums(nums, 3, 2020) # Check 3 values that sum to 2020
