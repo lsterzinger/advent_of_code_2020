@@ -2,39 +2,55 @@ using DelimitedFiles
 using Printf
 
 
-function test_passports(file, req_fields)
-    open(file, "r") do f
-        total = 0
-        inval = 0
+function test_passports(file, req_keys)
+    total = 0
+    inval = 0
+    dict = Dict()
+
+    open(file) do f
         dict = Dict()
 
-        for l in eachline(f)
-            if l == ""
-                total += 1
-                for key in req_fields
-                    if haskey(dict, key) == false
-                        inval += 1
-                        break
-                    end
+        while !eof(f)
+            line = readline(f)
+            if line != ""
+                pairs = split(line, " ")
+                for p in pairs
+                    a,b = split(p, ":")
+                    dict[a] = b
                 end
-                dict = Dict()
             else
-                for string in split(l, " ")
-                    pair = split(string, ":")
-                    # println(pair)
-                    dict[pair[1]] = pair[2]
+                total += 1
+
+                if check_keys(dict, req_keys) == false
+                    inval += 1
                 end
+
+                dict = Dict()
             end
         end
-        println(file)
-        println("Total\t",total)
-        println("Invalid\t",inval)
-        println("Valid\t",total-inval)
+        if check_keys(dict, req_keys) == false
+            inval += 1
+        end
+        total +=1 
     end
+    # println(total)
+    println(file)
+    println("Total\t",total)
+    println("Invalid\t",inval)
+    println("Valid\t",total-inval)
+end
+
+function check_keys(dict, req_keys)
+    for key in req_keys
+        if haskey(dict, key) == false
+            return false
+        end
+    end
+    return true
 end
 
 # print("Total\t$(total)\nInvalid\t$(inval)\n")
-req_fields = [
+req_keys = [
     "byr", 
     "iyr", 
     "eyr", 
@@ -44,5 +60,5 @@ req_fields = [
     "pid", 
 ]
 
-test_passports("./input.dat", req_fields)
-test_passports("./test_input.txt", req_fields)
+test_passports("./input.dat", req_keys)
+# test_passports("./test_input.txt", req_keys)
