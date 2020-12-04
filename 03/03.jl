@@ -1,29 +1,44 @@
 using DelimitedFiles
 using Printf
 
-function count_trees(slope_file, dh, dv)
-    nrows = size(slope_file)[1]
-    ncol = length(slope_file[1])
+function count_trees(sf, dh, dv)
+    nrows = size(sf)[1]
+    ncols = length(sf[1,1][:])
+    
+    pos = 1
+    ntree = 0
+    
+    for i in 1+dv:dv:nrows
+        # println(i)
+        # println(sf[i,1][:])
 
-    position = 1
-    tree_count = 0
-    println(ncol)
-    for vert in 1+dv:dv:(nrows-dv)
-        horiz = position + dh
-        if horiz > ncol
-            horiz = horiz - position - 1
-        end 
-        # println(vert, " ", horiz)
+        pos = pos + dh
+        if pos > ncols
+            pos = pos - ncols
+        end
 
-        if slope_file[vert][horiz] == '#'
-            tree_count += 1
-        end 
-        
-        position = horiz
+        if sf[i,1][pos] == '#'
+            ntree += 1
+        end
     end
-
-    return tree_count
+    return ntree
 end
 
 slope = readdlm("./input.dat")
-println(count_trees(slope, 3, 1))
+
+println("Part a:\t", count_trees(slope, 3, 1))
+
+a = count_trees(slope, 1, 1)
+b = count_trees(slope, 3, 1)
+c = count_trees(slope, 5, 1)
+d = count_trees(slope, 7, 1)
+e = count_trees(slope, 1, 2)
+
+println("===================")
+println("R1, D1\t", a)
+println("R3, D1\t", b)
+println("R5, D1\t", c)
+println("R7, D1\t", d)
+println("R1, D2\t", e)
+println("===================")
+println("Product: ", a*b*c*d*e)
