@@ -24,14 +24,25 @@ end
 # Function to strip the number off of text
 # TODO parse number and make it a property
 function strip_number(big_dict)
-    new_contents = []
     for (bag, contents) in big_dict
         # println(bag)
+
         new_contents = []
+        content_dict = Dict() # dict with "number" => nbags, "contents" => bag contents
+        nbags = Dict() # nbags is dict with "bag_name" => number
+
+        # Strip number from bag name and add to nbags
         for c in contents
             new_contents = vcat(new_contents, c[3:length(c)])
+            nbags[c[3:length(c)]] = 0
+            if c != "no other bag"
+                nbags[c[3:length(c)]] += parse(Int, c[1])
+            end
         end
-        big_dict[bag] = new_contents
+
+        content_dict["number"] = nbags
+        content_dict["contents"] = new_contents
+        big_dict[bag] = content_dict
     end
 
     # println(big_dict)
@@ -42,7 +53,7 @@ end
 function bag_in_bag(big_dict, bag, bag_goal)
 
     # Loop over contents of current bag
-    for c in big_dict[bag]
+    for c in big_dict[bag]["contents"]
         if c == " other bag"
             return false
         end
@@ -56,21 +67,42 @@ function bag_in_bag(big_dict, bag, bag_goal)
     return false
 end
 
-# Loop over all instructions and count
-function count_bags(instructions, bag_goal)
-    instructs = parse_bags(instructions)
+# Find if the goal is in the bag
+function goal_in_bag(instructions, bag_goal)
+    ins = parse_bags(instructions)
 
-    n = 0
-    for (bag,_) in instructs
-        if bag_in_bag(instructs, bag, bag_goal)
-            n += 1
+    n_goal = 0
+    for (bag,_) in ins
+        if bag_in_bag(ins, bag, bag_goal)
+            n_goal += 1
         end
     end
 
-    return n
+    return n_goal
+end
+
+function num_bags(instructions, start_bag; orig=false)
+    ins = parse_bags(instructions)
+    sbag = ins[start_bag]
+
+    nbags = 1
+
+    # println("Checking ", sbag)
+    for c in sbag["contents"] 
+        if c != " other bag"
+            nbags += sbag["number"][c] * num_bags(instructions, c)
+        end
+    end
+
+    # Return nbags-1 if this is the "original bag"
+    if orig
+        return nbags -1 
+    else
+        return nbags
+    end
 end
 
 instructions = readlines("./instructions.txt")
-# instructions = readlines("./test_inst.txt")
 
-println("Part One: ",count_bags(instructions, "shiny gold bag"))
+println("Part One: ", goal_in_bag(instructions, "shiny gold bag"))
+println("Part Two: ", num_bags(instructions, "shiny gold bag", orig=true))
