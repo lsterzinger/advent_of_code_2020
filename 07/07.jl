@@ -1,56 +1,77 @@
-function parse_bag(instruction)
-    bag = Dict()
-    # println(inst)
-    origin, contents = split(instruction, " contain ")
-    # println(origin, "\t", contents)
-    bag["name"] = origin
-    
-    # Check if end of trail
-    if contents == "no other bags."
-        println("end of trail found:\t", origin)
-        return
-    end
-    
-    # Strip "." and "bags" -> "bag"
-    contents = replace(contents, "." => "")
-    contents = replace(contents, "bags" => "bag")
+function parse_bags(instructions)
 
-    # Split contents
-    if ',' in contents
-        bag["contents"] = split(contents, ", ")
-    else
-        bag["contents"] = [contents]
-    end
-    return strip_number(bag)
-end
+    big_dict = Dict()
 
-function strip_number(bag)
-    new_contents = []
-    for b in bag["contents"]
-        new =  b[3:length(b)]
-        new_contents = vcat(new_contents,new)
-    end
-    bag["contents"] = new_contents
-    return bag
-end
+    for instruction in instructions
+        origin, contents = split(instruction, " contain ")
 
-function bag_in_bag(instructions, bag, bag_goal)
-    for inst in instructions
-        current_bag = parse_bag(inst)
-        if current_bag["name"] == bag_goal
-            return true
-        elseif current_bag["name"] == bag
-            for b in current_bag["contents"]
-                if bag_in_bag(instructions, b, bag_goal) == true
-                    return true
-                end
-            end
+        contents = replace(contents, "." => "")
+        contents = replace(contents, "bags" => "bag")
+        origin = replace(origin, "bags" => "bag")
+
+        # Split contents
+        if ',' in contents
+            big_dict[origin] = split(contents, ", ")
+        else
+            big_dict[origin] = [contents]
         end
     end
+    return strip_number(big_dict)
 end
 
-# instructions = readlines("./instructions.txt")
-instructions = readlines("./test_inst.txt")
-first_bag = parse_bag(instructions[1])
-# println(first_bag)
-bag_in_bag(instructions, first_bag["name"], "shiny gold bag")
+function strip_number(big_dict)
+    new_contents = []
+    for (bag, contents) in big_dict
+        # println(bag)
+        new_contents = []
+        for c in contents
+            new_contents = vcat(new_contents, c[3:length(c)])
+        end
+        big_dict[bag] = new_contents
+    end
+
+    println(big_dict)
+    return big_dict
+end
+
+function bag_in_bag(big_dict, bag, bag_goal)
+
+    contents = big_dict[bag]
+    println("\tChecking ", bag)
+    for c in contents
+        if c == " other bag"
+            return false
+        end
+        if c == bag_goal 
+            println("\t\t!!", bag_goal, " found in ", bag)
+            return true
+        elseif bag_in_bag(big_dict, c, bag_goal)
+            return true
+        end
+    end
+    return false
+end
+
+function count_bags(instructions, bag_goal)
+    instructs = parse_bags(instructions)
+
+    n = 0
+    for (bag,_) in instructs
+        println("Checking: ",bag)
+        if bag_in_bag(instructs, bag, bag_goal)
+            n += 1
+        end
+    end
+
+    return n
+end
+# function parse_input(instructions)
+#     big_dict = Dict()
+#     for i in instructions
+        
+#     end
+
+instructions = readlines("./instructions.txt")
+# instructions = readlines("./test_inst.txt")
+
+println(count_bags(instructions, "shiny gold bag"))
