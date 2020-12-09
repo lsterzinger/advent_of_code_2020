@@ -1,5 +1,6 @@
 using Combinatorics
 
+# Checks if val is sum of n values in arr
 function is_sum(val, arr; n=2)
     s = with_replacement_combinations(arr, n)
     sums = []
@@ -14,6 +15,7 @@ function is_sum(val, arr; n=2)
     end
 end
 
+# Check all vals in a window of size preamble
 function check_vals(file; preamble = 25)
     i = 1
     while i <= (length(file) - preamble)
