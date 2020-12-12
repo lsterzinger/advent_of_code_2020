@@ -17,30 +17,6 @@ function process_input(adapters)
     # count_combs(adapters)
 end
 
-function count_jumps(adapters)
-    n1 = 0
-    n3 = 0
-    for i in 1:(length(adapters)-1)
-        d = adapters[i+1] - adapters[i]
-        if d == 1
-            n1 += 1
-        elseif d ==3
-            n3 += 1
-        end
-    end
-
-    println("n1 * n3 = ", n1 * n3)
-end
-
-function is_valid(adapters)
-    for i in 1:(length(adapters)-1)
-        if (adapters[i+1] - adapters[i]) > 3
-            return false
-        end
-    end
-    return true
-end
-
 function jumps(adapters)
     jumps = []
     a = adapters[1]
