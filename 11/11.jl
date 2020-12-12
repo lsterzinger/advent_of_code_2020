@@ -35,7 +35,7 @@ function get_adjacent(input, row, seat)
 end  
 
 function count_occupied(seats)
-    return try countmap(seats)['#'] catch; 0 end
+    return try countmap(Iterators.flatten(seats))['#'] catch; 0 end
 end
 
 function parse_input(input)
@@ -47,30 +47,26 @@ function parse_input(input)
 end
 
 function fill_seats(input)
-    change = true
-    input = parse_input(input)
-    
     nrows = length(input)
-    nseat = length(input[1])
+    nseats = length(input[1])
 
-    row = 1
-    seat = 1
-    while change == true
+    while true
+        output = deepcopy(input)
         change = false
-        for r in 1:length(input)
-            row = input[r]
-            for (s,seat) in enumerate(row) 
-                nfull = count_occupied(get_adjacent(input,r,s))
-                # println(nfull)
-                if seat == 'L' && nfull == 0
-                    input[r,s] = '#'
+        for (r, row) in enumerate(input)
+            for (s, seat) in enumerate(row)
+                nocc = count_occupied(get_adjacent(input, r, s))
+                if seat == 'L' && nocc == 0
+                    output[r][s] = '#'
                     change = true
-                elseif seat == '#' && nfull >= 5 # 5 including full seat
-                    input[r,s] = 'L'
+                elseif seat == '#' && nocc >= 5 # n_occurence > 4, +1 for seat in question
+                    output[r][s] = 'L'
                     change = true
                 end
             end
         end
+        input = deepcopy(output)
+        if change == false return input end
     end
 end
 
@@ -101,5 +97,5 @@ test_input2 = [
     "#.#####.##",
 
 ]
-
-fill_seats(test_input)
+seats = readlines("seats.txt")
+println(count_occupied(fill_seats(parse_input(seats))))
