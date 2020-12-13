@@ -15,14 +15,15 @@ function find_next_bus(input)
 
     while true
         buses += btimes
-        for b in sort(buses)
+        for (i,b) in enumerate(sort(buses))
             if b > t
                 println("$t, $buses")
-                return b - t
+                return (b - t) * sort(btimes)[i]
             end
         end
     end
 end
 
-test_input = ["939", "7,13,x,x,59,x,31,19"]
+# test_input = ["939", "7,13,x,x,59,x,31,19"]
+test_input = readlines("./notes.txt")
 println(find_next_bus(test_input))
