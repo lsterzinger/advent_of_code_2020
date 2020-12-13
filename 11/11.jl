@@ -1,101 +1,74 @@
+# Thanks again to Jonathan Paulson
+# whose video https://youtu.be/d25r5GZa4us
+# helped figure out a faster way to accomplish
+# this puzzle
+
 using StatsBase
 
-function get_adjacent(input, row, seat)
-    nrows = length(input)
-    nseat = length(input[1])
-    # adj = Array{Char}(undef, 3,3)
-    adj = []
-    if row == 1
-        r1 = 1
-        r2 = row + 1
-    elseif row == nrows
-        r1 = row - 1
-        r2 = nrows
-    else
-        r1 = row -1
-        r2 = row + 1
-    end
-
-    if seat == 1
-        s1 = 1
-        s2 = seat + 1
-    elseif seat == nseat
-        s1 = seat - 1
-        s2 = nseat
-    else
-        s1 = seat - 1
-        s2 = seat + 1
-    end
-    for (i,r) in enumerate(input[r1:r2])
-        append!(adj, collect(r[s1:s2]))
-        
-        # adj[i,1:(s2-s1)+1] = collect(r[s1:s2])
-    end
-    return adj
-end  
-
-function count_occupied(seats)
-    return try countmap(Iterators.flatten(seats))['#'] catch; 0 end
-end
-
 function parse_input(input)
-    new_input = []
-    for row in input
-        push!(new_input, collect(row))
-    end
-    return new_input
+    nr = length(input)
+    ns = length(input[1])
+    input = reshape(split(join(input), ""), (ns, nr))
+
+    return input
 end
 
-function fill_seats(input)
-    nrows = length(input)
-    nseats = length(input[1])
-
+function fill_seats(input; part_one = true)
+    (ns, nr) = size(input)
     while true
         output = deepcopy(input)
         change = false
-        for (r, row) in enumerate(input)
-            for (s, seat) in enumerate(row)
-                nocc = count_occupied(get_adjacent(input, r, s))
-                if seat == 'L' && nocc == 0
-                    output[r][s] = '#'
+        
+        # Loop over all rows and seats
+        for r in 1:nr
+            for s in 1:ns
+                
+                # Find # of occurences
+                nocc = 0
+                for dr in [-1,0,1]
+                    for ds in [-1,0,1]
+                        if !(dr == 0 && ds == 0)
+                            rr = r + dr
+                            ss = s + ds
+
+                            while 1<=(rr)<=nr && 1<=(ss)<=ns && input[ss,rr] == "." && !part_one
+                                rr += dr
+                                ss += ds
+                            end
+                            if 1<=(rr)<=nr && 1<=(ss)<=ns && input[ss,rr] == "#" 
+                                nocc += 1
+                            end
+                        end
+                    end
+                end
+                
+                # Change output based on occurences
+                if input[s,r] == "L" && nocc == 0
+                    output[s,r] = "#"
                     change = true
-                elseif seat == '#' && nocc >= 5 # n_occurence > 4, +1 for seat in question
-                    output[r][s] = 'L'
+                elseif input[s,r] == "#" && nocc >= (if part_one 4 else 5 end)
+                    output[s,r] = "L"
                     change = true
                 end
             end
         end
+    
+        if change == false return output end
         input = deepcopy(output)
-        if change == false return input end
     end
+    
+    
 end
 
-test_input = [
-    "L.LL.LL.LL",
-    "LLLLLLL.LL",
-    "L.L.L..L..",
-    "LLLL.LL.LL",
-    "L.LL.LL.LL",
-    "L.LLLLL.LL",
-    "..L.L.....",
-    "LLLLLLLLLL",
-    "L.LLLLLL.L",
-    "L.LLLLL.LL",
+function total_empty(input)
+    return countmap(input)["#"]
+end
 
-]
 
-test_input2 = [
-    "#.##.##.##",
-    "#######.##",
-    "#.#.#..#..",
-    "####.##.##",
-    "#.##.##.##",
-    "#.#####.##",
-    "..#.#.....",
-    "##########",
-    "#.######.#",
-    "#.#####.##",
-
-]
 seats = readlines("seats.txt")
-println(count_occupied(fill_seats(parse_input(seats))))
+
+final_seats = fill_seats(parse_input(seats))
+println("Part 1: ", total_empty(final_seats))
+
+final_seats = fill_seats(parse_input(seats), part_one=false)
+println("Part 2: ", total_empty(final_seats))
