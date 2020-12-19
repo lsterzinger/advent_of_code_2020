@@ -9,11 +9,11 @@ function parse_inst(val)
 end
 
 function apply_mask(mask, val)
-    bval = collect(bitstring(val)[28:64])
+    bval = collect(bitstring(val)[29:64])
     bmask = collect(mask)
     # println(bval)
     # println(bmask)
-    if size(bval) != size(bmask) error("bit string wrong size!") end
+    # if size(bval) != size(bmask) error("bit string wrong size!") end
 
     for i in 1:36
         if bmask[i] != 'X'
@@ -36,19 +36,21 @@ function sum_mem(mem)
     return s
 end
 
-
-global mem = Dict()
-
-for line in readlines("./init_program.txt")
-
-    if line[1:6] == "mask ="
-        global mask = line[7:length(line)]
-    else
-        addr, val = parse_inst(line)
-        # println("mem[$addr] = $val")
-        val = apply_mask(mask, val)
-        mem[addr] = val
+function run_program(file)
+    mem = Dict()
+    
+    for line in readlines("./init_program.txt")
+        if line[1:6] == "mask ="
+            global mask = line[8:length(line)]
+        else
+            addr, val = parse_inst(line)
+            # println("mem[$addr] = $val")
+            val = apply_mask(mask, val)
+            mem[addr] = Int(val)
+        end
     end
+    return sum_mem(mem)
 end
-println(sum_mem(mem))
+# println(mem)
+println(run_program("./init_program.txt"))
 
