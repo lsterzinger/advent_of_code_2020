@@ -23,10 +23,23 @@ function apply_mask(mask, val; part2=false)
         newval = parse(UInt, bval, base=2)
         # println("Changed $val to $bval = $newval")
         return newval
+    else
+        bval = collect(bitstring(val)[29:64])
+        bmask = collect(mask)
+        for i in 1:36
+            if bmask[i] == 'X' || bmask[i] == '1'
+                bval[i] = bmask[i]
+            end
+        end
+
+        bval = join(bval)   
+        # newval = parse(UInt, bval, base=2)
+        # println("Changed $val to $bval = $newval")
+        return bval
     end
 end
 
-function get_possible_masks(masklist)
+function get_possible_addrs(masklist)
     newmasklist = []
     for mask in masklist
         bmask = collect(mask)
@@ -42,7 +55,7 @@ function get_possible_masks(masklist)
             end
         end
     end
-    return get_possible_masks(newmasklist)
+    return get_possible_addrs(newmasklist)
 end
 
 function sum_mem(mem)
@@ -56,7 +69,7 @@ end
 function run_program(file; part2 = false)
     mem = Dict()
     
-    for line in readlines("./init_program.txt")
+    for line in readlines(file)
         if line[1:6] == "mask ="
             global mask = line[8:length(line)]
         elseif !part2
@@ -66,14 +79,19 @@ function run_program(file; part2 = false)
             mem[addr] = Int(val)
         else
             addr, val = parse_inst(line)
-            addr_list = apply_mask(mask, addr)
-            for addr in addr_list
-                mem[addr] = Int(val)
+            masked_addr = apply_mask(mask, addr, part2=true)
+            addrlist = get_possible_addrs([masked_addr])
+            for a in addrlist
+                a_int = parse(UInt, a, base=2)
+                mem[a_int] = val
             end
+
         end
     end
     return sum_mem(mem)
 end
 # println(mem)
+# println(run_program("./test_input.txt"))
+println(run_program("./init_program.txt", part2=true))
 # println(run_program("./init_program.txt"))
-println(get_possible_masks(["000000000000000000000000000000X1001X"]))
+# println(get_possible_masks(["000000000000000000000000000000X1001X"]))
