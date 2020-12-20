@@ -1,4 +1,4 @@
-
+# Function to parse instruction and return address and value
 function parse_inst(val)
     reg = r"\[(.*?)\]"
     addr, val = split(val, "=")
@@ -8,8 +8,10 @@ function parse_inst(val)
     return addr, val
 end
 
+# Apply a mask either in part1 or part2 format
 function apply_mask(mask, val; part2=false)
     
+    # Part 1: change the value everywhere the mask != X
     if !part2
         bval = collect(bitstring(val)[29:64])
         bmask = collect(mask)
@@ -23,6 +25,9 @@ function apply_mask(mask, val; part2=false)
         newval = parse(UInt, bval, base=2)
         # println("Changed $val to $bval = $newval")
         return newval
+    
+    # Part 2: Change value (address in this case)
+    # where mask == X or mask == 1
     else
         bval = collect(bitstring(val)[29:64])
         bmask = collect(mask)
@@ -33,12 +38,13 @@ function apply_mask(mask, val; part2=false)
         end
 
         bval = join(bval)   
-        # newval = parse(UInt, bval, base=2)
-        # println("Changed $val to $bval = $newval")
         return bval
     end
 end
 
+# Take the output of apply_mask with part2 output
+# and treat X as a floating value, can equal 1 or 0.
+# Return all possible combinations using recusion
 function get_possible_addrs(masklist)
     newmasklist = []
     for mask in masklist
@@ -51,13 +57,14 @@ function get_possible_addrs(masklist)
                 bmask[i] = '0'
                 newmasklist = vcat(newmasklist, join(bmask))
                 break
-                # return get_possible_masks(newmasklist)
             end
         end
     end
+    # This part is the recusion
     return get_possible_addrs(newmasklist)
 end
 
+# Sum all values in mem dict
 function sum_mem(mem)
     s = 0
     for key in keys(mem)
@@ -66,6 +73,8 @@ function sum_mem(mem)
     return s
 end
 
+# Main function to run the program.
+# Parses lines and applies the masks correctly.
 function run_program(file; part2 = false)
     mem = Dict()
     
@@ -90,8 +99,6 @@ function run_program(file; part2 = false)
     end
     return sum_mem(mem)
 end
-# println(mem)
-# println(run_program("./test_input.txt"))
-println(run_program("./init_program.txt", part2=true))
-# println(run_program("./init_program.txt"))
-# println(get_possible_masks(["000000000000000000000000000000X1001X"]))
+
+println("Part 1: ", run_program("./init_program.txt"))
+println("Part 2: ", run_program("./init_program.txt", part2=true))
